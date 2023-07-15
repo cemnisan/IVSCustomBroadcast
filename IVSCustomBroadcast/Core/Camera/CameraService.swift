@@ -58,7 +58,7 @@ final class CameraService: NSObject, CameraServiceInterace {
     private var keyValueObserverations = [NSKeyValueObservation]()
     
     // MARK: - Initializer
-    override init() { }
+    override init() {}
     
     // MARK: - Public Methods
     func loadSession() {

@@ -7,6 +7,7 @@
 
 import UIKit
 import SnapKit
+import Alamofire
 
 protocol IVSCustomBroadcastViewControllerInterface {
     func attachCameraPreview(previewView: UIView)
@@ -16,7 +17,7 @@ final class IVSCustomBroadcastViewController: UIViewController {
     
     // MARK: - Properties
     private var viewModel: IVSCustomBroadcastViewModelInterafce
-    
+        
     // MARK: - Initializer
     init(viewModel: IVSCustomBroadcastViewModelInterafce) {
         self.viewModel = viewModel
@@ -39,6 +40,7 @@ final class IVSCustomBroadcastViewController: UIViewController {
         super.viewDidLoad()
         configureUI()
         configurePreviewGestures()
+        addObservers()
         viewModel.view = self
         viewModel.viewDidLoad()
     }
@@ -86,6 +88,15 @@ extension IVSCustomBroadcastViewController {
         pinch.delegate = self
         previewContainerView.addGestureRecognizer(pinch)
     }
+    
+    private func addObservers() {
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleNetworkReachability(_:)),
+            name: .networkReachability,
+            object: nil
+        )
+    }
 }
 
 // MARK: - Actions
@@ -102,6 +113,18 @@ extension IVSCustomBroadcastViewController {
     @objc
     private func handlePinchGesture(_ sender: UIPinchGestureRecognizer) {
         viewModel.didZoomingBegan(sender)
+    }
+    
+    @objc
+    private func handleNetworkReachability(_ sender: Notification) {
+        guard let status = sender.object as? NetworkReachabilityManager.NetworkReachabilityStatus else { return }
+        
+        switch status {
+        case .notReachable: print("not reachable")
+        case .reachable(.cellular), .reachable(.ethernetOrWiFi):
+            print("reachable :\(status)")
+        case .unknown: print("unkown")
+        }
     }
 }
 

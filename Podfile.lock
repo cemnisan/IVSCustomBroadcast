@@ -1,22 +1,26 @@
 PODS:
+  - Alamofire (5.7.1)
   - AmazonIVSBroadcast (1.9.1):
     - AmazonIVSBroadcast/Core (= 1.9.1)
   - AmazonIVSBroadcast/Core (1.9.1)
   - SnapKit (5.6.0)
 
 DEPENDENCIES:
+  - Alamofire
   - AmazonIVSBroadcast (~> 1.9.1)
   - SnapKit
 
 SPEC REPOS:
   trunk:
+    - Alamofire
     - AmazonIVSBroadcast
     - SnapKit
 
 SPEC CHECKSUMS:
+  Alamofire: 0123a34370cb170936ae79a8df46cc62b2edeb88
   AmazonIVSBroadcast: 8da606edfcd5a42aae4a07a142e34f1519ca4ca0
   SnapKit: e01d52ebb8ddbc333eefe2132acf85c8227d9c25
 
-PODFILE CHECKSUM: 655d646233e18274550e9e3d8ca3fee4eb06bf7b
+PODFILE CHECKSUM: 113d3caafbf1458e4421a84f73938732c2bc06b7
 
 COCOAPODS: 1.11.3

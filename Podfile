@@ -10,5 +10,6 @@ target 'IVSCustomBroadcast' do
   # Pods for IVSCustomBroadcast
   pod 'SnapKit'
   pod 'AmazonIVSBroadcast', "~> 1.9.1"
+  pod 'Alamofire'
 
 end

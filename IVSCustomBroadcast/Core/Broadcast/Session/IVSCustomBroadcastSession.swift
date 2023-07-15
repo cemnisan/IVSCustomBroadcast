@@ -104,7 +104,10 @@ final class IVSCustomBroadcastSession: NSObject, IVSCustomBroadcastSessionInterf
     private func startBroadcastSession() {
         self.setupSession(isStandart: true)
         do {
-            try self.broadcastSession?.start(with: self.streamModel.streamURL, streamKey: self.streamModel.streamKey)
+            try self.broadcastSession?.start(
+                with: self.streamModel.streamURL,
+                streamKey: self.streamModel.streamKey
+            )
         } catch {
             print("❌ Error starting IVSBroadcastSession: \(error)")
         }

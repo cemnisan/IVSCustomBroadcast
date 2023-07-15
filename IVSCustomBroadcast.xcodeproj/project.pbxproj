@@ -18,6 +18,8 @@
 		7E2687F62A628D3700351702 /* CameraService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E2687F52A628D3700351702 /* CameraService.swift */; };
 		7E2687F92A62B2CD00351702 /* Constant.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E2687F82A62B2CD00351702 /* Constant.swift */; };
 		7E2687FC2A62B3D000351702 /* IVSCustomVeiwControllerBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E2687FB2A62B3D000351702 /* IVSCustomVeiwControllerBuilder.swift */; };
+		7E2688002A62F15E00351702 /* Notification.Name+Ex.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E2687FF2A62F15E00351702 /* Notification.Name+Ex.swift */; };
+		7EF274E42A6305EF00B94871 /* NetworkManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7EF274E32A6305EF00B94871 /* NetworkManager.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -34,6 +36,8 @@
 		7E2687F52A628D3700351702 /* CameraService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraService.swift; sourceTree = "<group>"; };
 		7E2687F82A62B2CD00351702 /* Constant.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constant.swift; sourceTree = "<group>"; };
 		7E2687FB2A62B3D000351702 /* IVSCustomVeiwControllerBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IVSCustomVeiwControllerBuilder.swift; sourceTree = "<group>"; };
+		7E2687FF2A62F15E00351702 /* Notification.Name+Ex.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Notification.Name+Ex.swift"; sourceTree = "<group>"; };
+		7EF274E32A6305EF00B94871 /* NetworkManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkManager.swift; sourceTree = "<group>"; };
 		95EBC50E46EF2156FAE62C7B /* Pods_IVSCustomBroadcast.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_IVSCustomBroadcast.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		E62572B4259E23836B7DD805 /* Pods-IVSCustomBroadcast.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-IVSCustomBroadcast.debug.xcconfig"; path = "Target Support Files/Pods-IVSCustomBroadcast/Pods-IVSCustomBroadcast.debug.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -119,6 +123,7 @@
 		7E2687E72A628C5C00351702 /* Core */ = {
 			isa = PBXGroup;
 			children = (
+				7E2688012A63029B00351702 /* Network */,
 				7E2687F42A628D2900351702 /* Camera */,
 				7E2687EF2A628CFD00351702 /* Broadcast */,
 			);
@@ -178,7 +183,8 @@
 		7E2687F72A62B2C200351702 /* Utils */ = {
 			isa = PBXGroup;
 			children = (
-				7E2687F82A62B2CD00351702 /* Constant.swift */,
+				7E2687FE2A62F15300351702 /* Constants */,
+				7E2687FD2A62F14D00351702 /* Extensions */,
 			);
 			path = Utils;
 			sourceTree = "<group>";
@@ -189,6 +195,30 @@
 				7E2687FB2A62B3D000351702 /* IVSCustomVeiwControllerBuilder.swift */,
 			);
 			path = Builder;
+			sourceTree = "<group>";
+		};
+		7E2687FD2A62F14D00351702 /* Extensions */ = {
+			isa = PBXGroup;
+			children = (
+				7E2687FF2A62F15E00351702 /* Notification.Name+Ex.swift */,
+			);
+			path = Extensions;
+			sourceTree = "<group>";
+		};
+		7E2687FE2A62F15300351702 /* Constants */ = {
+			isa = PBXGroup;
+			children = (
+				7E2687F82A62B2CD00351702 /* Constant.swift */,
+			);
+			path = Constants;
+			sourceTree = "<group>";
+		};
+		7E2688012A63029B00351702 /* Network */ = {
+			isa = PBXGroup;
+			children = (
+				7EF274E32A6305EF00B94871 /* NetworkManager.swift */,
+			);
+			path = Network;
 			sourceTree = "<group>";
 		};
 		DAEDE5A4B0B147F894594516 /* Frameworks */ = {
@@ -315,11 +345,13 @@
 			files = (
 				7E2687F92A62B2CD00351702 /* Constant.swift in Sources */,
 				7E2687EE2A628CE000351702 /* IVSCustomBroadcastViewModel.swift in Sources */,
+				7EF274E42A6305EF00B94871 /* NetworkManager.swift in Sources */,
 				7E2687FC2A62B3D000351702 /* IVSCustomVeiwControllerBuilder.swift in Sources */,
 				7E2687D12A628C2300351702 /* AppDelegate.swift in Sources */,
 				7E2687F62A628D3700351702 /* CameraService.swift in Sources */,
 				7E2687F32A628D1C00351702 /* IVSCustomBroadcastSession.swift in Sources */,
 				7E2687D32A628C2300351702 /* SceneDelegate.swift in Sources */,
+				7E2688002A62F15E00351702 /* Notification.Name+Ex.swift in Sources */,
 				7E2687E92A628C6800351702 /* IVSCustomBroadcastViewController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
