@@ -16,7 +16,6 @@ final class IVSCustomBroadcastViewController: UIViewController {
     // MARK: - Life Cycles
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = .red
     }
     
     // MARK: - Methods

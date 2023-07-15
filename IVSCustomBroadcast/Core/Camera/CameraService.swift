@@ -6,3 +6,9 @@
 //
 
 import Foundation
+import AVFoundation
+
+final class CameraService: NSObject {
+    
+    // MARK: - Properties
+}

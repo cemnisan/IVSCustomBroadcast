@@ -1,0 +1,22 @@
+PODS:
+  - AmazonIVSBroadcast (1.9.1):
+    - AmazonIVSBroadcast/Core (= 1.9.1)
+  - AmazonIVSBroadcast/Core (1.9.1)
+  - SnapKit (5.6.0)
+
+DEPENDENCIES:
+  - AmazonIVSBroadcast (~> 1.9.1)
+  - SnapKit
+
+SPEC REPOS:
+  trunk:
+    - AmazonIVSBroadcast
+    - SnapKit
+
+SPEC CHECKSUMS:
+  AmazonIVSBroadcast: 8da606edfcd5a42aae4a07a142e34f1519ca4ca0
+  SnapKit: e01d52ebb8ddbc333eefe2132acf85c8227d9c25
+
+PODFILE CHECKSUM: 655d646233e18274550e9e3d8ca3fee4eb06bf7b
+
+COCOAPODS: 1.11.3
