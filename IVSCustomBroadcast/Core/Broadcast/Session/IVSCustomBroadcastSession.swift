@@ -9,7 +9,7 @@ import Foundation
 import AmazonIVSBroadcast
 
 protocol IVSCustomBroadcastSessionDelegate: AnyObject {
-    func attachCameraPreview(container: UIView, preview: UIView)
+    func attachCameraPreview(previewView: UIView)
 }
 
 final class IVSCustomBroadcastSession: NSObject {
@@ -18,7 +18,6 @@ final class IVSCustomBroadcastSession: NSObject {
     weak var delegate: IVSCustomBroadcastSessionDelegate?
     
     // MARK: - Dependencies
-    private let previewContainerView: UIView
     private let cameraService: CameraService
     
     // MARK: - Session
@@ -31,10 +30,7 @@ final class IVSCustomBroadcastSession: NSObject {
     private var customImageSource: IVSCustomImageSource?
     
     // MARK: - Initializer
-    init(previewContainerView: UIView,
-         cameraService: CameraService = CameraService())
-    {
-        self.previewContainerView = previewContainerView
+    init(cameraService: CameraService = CameraService()) {
         self.cameraService = cameraService
         super.init()
     }
@@ -85,10 +81,7 @@ final class IVSCustomBroadcastSession: NSObject {
             self.customImageSource = customImageSource
             
             let previewView = try customImageSource.previewView(with: .fit)
-            delegate?.attachCameraPreview(
-                container: previewContainerView,
-                preview: previewView
-            )
+            delegate?.attachCameraPreview(previewView: previewView)
             
             self.broadcastSession = broadcastSession
             

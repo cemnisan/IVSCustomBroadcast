@@ -16,9 +16,7 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
                options connectionOptions: UIScene.ConnectionOptions)
     {
         guard let windowScene = (scene as? UIWindowScene) else { return }
-        
-        let viewController = IVSCustomBroadcastViewController()
-        let rootController = UINavigationController(rootViewController: viewController)
+        let rootController = IVSCustomVeiwControllerBuilder.build()
         window = UIWindow(windowScene: windowScene)
         window?.rootViewController = rootController
         window?.makeKeyAndVisible()
