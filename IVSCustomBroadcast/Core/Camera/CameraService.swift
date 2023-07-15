@@ -8,13 +8,25 @@
 import Foundation
 import AVFoundation
 
+enum SessionSetupResult {
+    case success
+    case configurationFailed
+}
+
+protocol CameraServiceInterace {
+    var delegate: CameraServiceDelegate? { get set }
+    var setupResult: SessionSetupResult { get }
+    
+    func loadSession()
+}
+
 protocol CameraServiceDelegate: AnyObject {
     func didCameraErrorOccured(_ delegate: CameraService, error: String)
     func didVideoCaptureOutput(_ delegate: CameraService, capturedOutput sampleBuffer: CMSampleBuffer)
     func didAudioCaptureOutput(_ delegate: CameraService, capturedOutput sampleBuffer: CMSampleBuffer)
 }
 
-final class CameraService: NSObject {
+final class CameraService: NSObject, CameraServiceInterace {
     
     // MARK: - Properties
     weak var delegate: CameraServiceDelegate?
@@ -41,22 +53,11 @@ final class CameraService: NSObject {
     // MARK: - KVO
     private var keyValueObserverations = [NSKeyValueObservation]()
     
-    // MARK: - Nested Types
-    enum SessionSetupResult {
-        case success
-        case notAuthorized
-        case configurationFailed
-    }
-    
     // MARK: - Initializer
     override init() { }
     
     // MARK: - Public Methods
     func loadSession() {
-        let videoAuthrozationStatus = AVCaptureDevice.authorizationStatus(for: .video)
-      
-        handleAuthorizationStatus(status: videoAuthrozationStatus)
-        
         sessionQueue.async {
             self.configureSession()
         }
@@ -74,22 +75,6 @@ final class CameraService: NSObject {
     }
     
     // MARK: - Private Methods
-    private func handleAuthorizationStatus(status: AVAuthorizationStatus) {
-        switch status {
-        case .authorized: break
-        case .notDetermined:
-            sessionQueue.suspend()
-            AVCaptureDevice.requestAccess(for: .video) { (granted) in
-                if !granted {
-                    self.setupResult = .notAuthorized
-                }
-                self.sessionQueue.resume()
-            }
-        default:
-            setupResult = .notAuthorized
-        }
-    }
-    
     private func configureSession() {
         if setupResult != .success {
             return

@@ -8,6 +8,11 @@
 import Foundation
 import AmazonIVSBroadcast
 
+struct StreamModel {
+    let streamURL: URL
+    let streamKey: String
+}
+
 protocol IVSCustomBroadcastSessionDelegate: AnyObject {
     func attachCameraPreview(previewView: UIView)
 }
@@ -18,7 +23,8 @@ final class IVSCustomBroadcastSession: NSObject {
     weak var delegate: IVSCustomBroadcastSessionDelegate?
     
     // MARK: - Dependencies
-    private let cameraService: CameraService
+    private let streamModel: StreamModel
+    private var cameraService: CameraServiceInterace
     
     // MARK: - Session
     private var broadcastSession: IVSBroadcastSession?
@@ -30,26 +36,56 @@ final class IVSCustomBroadcastSession: NSObject {
     private var customImageSource: IVSCustomImageSource?
     
     // MARK: - Initializer
-    init(cameraService: CameraService = CameraService()) {
+    init(cameraService: CameraServiceInterace = CameraService(),
+         streamModel: StreamModel)
+    {
         self.cameraService = cameraService
+        self.streamModel = streamModel
         super.init()
     }
     
     func startBroadcastSession(with url: URL, streamKey: String) {
         switch cameraService.setupResult {
         case .success:
-            setupSession(isStandart: true)
-            do {
-                try broadcastSession?.start(with: url, streamKey: streamKey)
-            } catch {
-                print("❌ Error starting IVSBroadcastSession: \(error)")
-            }
-        case .notAuthorized: break
+            let authorizationStatus = AVCaptureDevice.authorizationStatus(for: .video)
+            handleAuthorizationStatus(status: authorizationStatus)
         case .configurationFailed: break
         }
     }
     
     // MARK: - Private methods
+    private func handleAuthorizationStatus(status: AVAuthorizationStatus) {
+        switch status {
+        case .authorized:
+            DispatchQueue.main.async {
+                self.startBroadcastSession()
+            }
+        case .notDetermined:
+            AVCaptureDevice.requestAccess(for: .video) { (granted) in
+                if granted {
+                    DispatchQueue.main.async {
+                        if self.broadcastSession == nil {
+                            self.startBroadcastSession()
+                        }
+                    }
+                   return
+                } else {
+                    // TODO: - Show Display error for permession
+                }
+            }
+        default: break
+        }
+    }
+    
+    private func startBroadcastSession() {
+        self.setupSession(isStandart: true)
+        do {
+            try self.broadcastSession?.start(with: self.streamModel.streamURL, streamKey: self.streamModel.streamKey)
+        } catch {
+            print("❌ Error starting IVSBroadcastSession: \(error)")
+        }
+    }
+    
     private func setupSession(isStandart: Bool) {
         do {
             let configuration = isStandart ?

@@ -9,7 +9,11 @@ import UIKit.UINavigationController
 
 final class IVSCustomVeiwControllerBuilder {
     static func build() -> UINavigationController {
-        let broadcastSession = IVSCustomBroadcastSession()
+        let streamModel = StreamModel(
+            streamURL: URL(string: K.streamURLString)!,
+            streamKey: K.streamKey
+        )
+        let broadcastSession = IVSCustomBroadcastSession(streamModel: streamModel)
         let viewModel = IVSCustomBroadcastViewModel(broadcastSession: broadcastSession)
         let viewController = IVSCustomBroadcastViewController(viewModel: viewModel)
         let rootViewController = UINavigationController(rootViewController: viewController)

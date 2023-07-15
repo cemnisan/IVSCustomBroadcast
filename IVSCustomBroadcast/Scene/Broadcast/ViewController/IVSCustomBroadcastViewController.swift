@@ -38,6 +38,7 @@ final class IVSCustomBroadcastViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         configureUI()
+        viewModel.view = self
         viewModel.viewDidLoad()
     }
     
@@ -55,7 +56,6 @@ final class IVSCustomBroadcastViewController: UIViewController {
     private func configureUI() {
         prepareSubviews()
         prepareUIAnchor()
-        viewModel.view = self
     }
     
     private func prepareSubviews() {
