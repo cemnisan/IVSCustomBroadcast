@@ -38,6 +38,7 @@ final class IVSCustomBroadcastViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         configureUI()
+        configurePreviewGestures()
         viewModel.view = self
         viewModel.viewDidLoad()
     }
@@ -51,8 +52,10 @@ final class IVSCustomBroadcastViewController: UIViewController {
         super.viewDidAppear(animated)
         viewModel.viewDidAppear()
     }
-    
-    // MARK: - Methods
+}
+
+// MARK: - Configuration
+extension IVSCustomBroadcastViewController {
     private func configureUI() {
         prepareSubviews()
         prepareUIAnchor()
@@ -68,9 +71,41 @@ final class IVSCustomBroadcastViewController: UIViewController {
         }
     }
     
-    // MARK: - Actions
+    private func configurePreviewGestures() {
+        let singleTap = UITapGestureRecognizer(
+            target: self,
+            action: #selector(handleTapGesture(_:))
+        )
+        singleTap.numberOfTapsRequired = 1
+        previewContainerView.addGestureRecognizer(singleTap)
+        
+        let pinch = UIPinchGestureRecognizer(
+            target: self,
+            action: #selector(handlePinchGesture(_:))
+        )
+        pinch.delegate = self
+        previewContainerView.addGestureRecognizer(pinch)
+    }
 }
 
+// MARK: - Actions
+extension IVSCustomBroadcastViewController {
+    @objc
+    private func handleTapGesture(_ sender: UITapGestureRecognizer) {
+        let screenSize = previewContainerView.bounds.size
+        let x = sender.location(in: previewContainerView).y / screenSize.height
+        let y = 1.0 - sender.location(in: previewContainerView).x / screenSize.width
+        let devicePoint = CGPoint(x: x, y: y)
+         viewModel.didTappedPreviewView(devicePoint: devicePoint)
+    }
+    
+    @objc
+    private func handlePinchGesture(_ sender: UIPinchGestureRecognizer) {
+        viewModel.didZoomingBegan(sender)
+    }
+}
+
+// MARK: - IVSCustomBroadcastViewController Interface
 extension IVSCustomBroadcastViewController: IVSCustomBroadcastViewControllerInterface {
     func attachCameraPreview(previewView: UIView) {
         previewContainerView.subviews.forEach { $0.removeFromSuperview() }
@@ -81,3 +116,6 @@ extension IVSCustomBroadcastViewController: IVSCustomBroadcastViewControllerInte
         }
     }
 }
+
+// MARK: - UIGestureRecognizer Delegate
+extension IVSCustomBroadcastViewController: UIGestureRecognizerDelegate {}

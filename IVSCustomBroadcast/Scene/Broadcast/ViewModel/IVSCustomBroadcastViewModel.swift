@@ -14,6 +14,9 @@ protocol IVSCustomBroadcastViewModelInterafce {
     func viewDidLoad()
     func viewDidAppear()
     func viewWillDisappear()
+    
+    func didTappedPreviewView(devicePoint point: CGPoint)
+    func didZoomingBegan(_ sender: UIPinchGestureRecognizer)
 }
 
 final class IVSCustomBroadcastViewModel {
@@ -42,6 +45,14 @@ extension IVSCustomBroadcastViewModel: IVSCustomBroadcastViewModelInterafce {
     }
     
     func viewWillDisappear() {}
+    
+    func didTappedPreviewView(devicePoint point: CGPoint) {
+        broadcastSession.startCameraFocus(with: point)
+    }
+    
+    func didZoomingBegan(_ sender: UIPinchGestureRecognizer) {
+        broadcastSession.startCameraZoom(with: sender)
+    }
 }
 
 // MARK: - IVSCustomBroadcastSession Delegate

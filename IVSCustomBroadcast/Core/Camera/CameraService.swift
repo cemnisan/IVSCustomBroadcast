@@ -7,6 +7,7 @@
 
 import Foundation
 import AVFoundation
+import UIKit.UIPinchGestureRecognizer
 
 enum SessionSetupResult {
     case success
@@ -18,6 +19,8 @@ protocol CameraServiceInterace {
     var setupResult: SessionSetupResult { get }
     
     func loadSession()
+    func focus(with devicePoint: CGPoint)
+    func zoom(with pinch: UIPinchGestureRecognizer)
 }
 
 protocol CameraServiceDelegate: AnyObject {
@@ -60,6 +63,45 @@ final class CameraService: NSObject, CameraServiceInterace {
     func loadSession() {
         sessionQueue.async {
             self.configureSession()
+        }
+    }
+    
+    func focus(with devicePoint: CGPoint) {
+        focus(
+            with: .autoFocus,
+            exposureMode: .autoExpose,
+            at: devicePoint,
+            monitorSubjectAreaChange: true
+        )
+    }
+    
+    func zoom(with pinch: UIPinchGestureRecognizer) {
+        func minMaxZoom(_ factor: CGFloat) -> CGFloat {
+            return min(
+                max(factor, 1.0),
+                videoDeviceInput.device.activeFormat.videoMaxZoomFactor
+            )
+        }
+        
+        func update(scale factor: CGFloat) {
+            do {
+                try videoDeviceInput.device.lockForConfiguration()
+                videoDeviceInput.device.videoZoomFactor = factor
+                videoDeviceInput.device.unlockForConfiguration()
+            } catch {
+                delegate?.didCameraErrorOccured(self, error: "An error has occured because of zooming: \(error.localizedDescription)")
+            }
+        }
+        
+        let newScaleFactor = minMaxZoom(pinch.scale * zoomFactor)
+        
+        switch pinch.state {
+        case .began: fallthrough
+        case .changed: update(scale: newScaleFactor)
+        case .ended:
+            zoomFactor = minMaxZoom(newScaleFactor)
+            update(scale: zoomFactor)
+        default: break
         }
     }
     
@@ -215,6 +257,39 @@ final class CameraService: NSObject, CameraServiceInterace {
             defaultVideoDevice = frontCameraDevice
         }
         return defaultVideoDevice
+    }
+    
+    private func focus(
+        with focusMode: AVCaptureDevice.FocusMode,
+        exposureMode: AVCaptureDevice.ExposureMode,
+        at devicePoint: CGPoint,
+        monitorSubjectAreaChange: Bool
+    ) {
+        sessionQueue.async {
+            let device = self.videoDeviceInput.device
+            do {
+                try device.lockForConfiguration()
+                
+                if device.isFocusPointOfInterestSupported &&
+                    device.isFocusModeSupported(focusMode)
+                {
+                    device.focusPointOfInterest = devicePoint
+                    device.focusMode = focusMode
+                }
+                
+                if device.isExposurePointOfInterestSupported &&
+                    device.isExposureModeSupported(exposureMode)
+                {
+                    device.exposurePointOfInterest = devicePoint
+                    device.exposureMode = exposureMode
+                }
+                
+                device.isSubjectAreaChangeMonitoringEnabled = monitorSubjectAreaChange
+                device.unlockForConfiguration()
+            } catch {
+                print("couldn't lock device for configuration: \(error)")
+            }
+        }
     }
 }
 

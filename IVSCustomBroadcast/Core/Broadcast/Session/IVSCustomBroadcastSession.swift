@@ -53,6 +53,14 @@ final class IVSCustomBroadcastSession: NSObject {
         }
     }
     
+    func startCameraFocus(with devicePoint: CGPoint) {
+        cameraService.focus(with: devicePoint)
+    }
+    
+    func startCameraZoom(with pinch: UIPinchGestureRecognizer) {
+        cameraService.zoom(with: pinch)
+    }
+    
     // MARK: - Private methods
     private func handleAuthorizationStatus(status: AVAuthorizationStatus) {
         switch status {
