@@ -96,7 +96,7 @@ extension IVSCustomBroadcastViewController {
         let x = sender.location(in: previewContainerView).y / screenSize.height
         let y = 1.0 - sender.location(in: previewContainerView).x / screenSize.width
         let devicePoint = CGPoint(x: x, y: y)
-         viewModel.didTappedPreviewView(devicePoint: devicePoint)
+        viewModel.didTappedPreviewView(devicePoint: devicePoint)
     }
     
     @objc

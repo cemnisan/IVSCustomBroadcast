@@ -17,6 +17,7 @@ protocol IVSCustomBroadcastSessionInterface {
     var delegate: IVSCustomBroadcastSessionDelegate? { get set }
     
     func startBroadcastSession(with url: URL, streamKey: String)
+    func stopBroadcastSession()
     func startCameraFocus(with devicePoint: CGPoint)
     func startCameraZoom(with pinch: UIPinchGestureRecognizer)
 }
@@ -58,6 +59,13 @@ final class IVSCustomBroadcastSession: NSObject, IVSCustomBroadcastSessionInterf
             let authorizationStatus = AVCaptureDevice.authorizationStatus(for: .video)
             handleAuthorizationStatus(status: authorizationStatus)
         case .configurationFailed: break
+        }
+    }
+    
+    func stopBroadcastSession() {
+        if cameraService.setupResult == .success {
+            broadcastSession?.stop()
+            cameraService.stopSession()
         }
     }
     

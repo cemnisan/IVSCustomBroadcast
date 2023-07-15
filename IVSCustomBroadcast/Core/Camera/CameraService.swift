@@ -19,6 +19,7 @@ protocol CameraServiceInterace {
     var setupResult: SessionSetupResult { get }
     
     func loadSession()
+    func stopSession()
     func focus(with devicePoint: CGPoint)
     func zoom(with pinch: UIPinchGestureRecognizer)
 }
@@ -66,6 +67,14 @@ final class CameraService: NSObject, CameraServiceInterace {
         }
     }
     
+    func stopSession() {
+        sessionQueue.async {
+            self.removeObservers()
+            self.session.stopRunning()
+            self.isSessionRunning = self.session.isRunning
+        }
+    }
+    
     func focus(with devicePoint: CGPoint) {
         focus(
             with: .autoFocus,
@@ -84,12 +93,14 @@ final class CameraService: NSObject, CameraServiceInterace {
         }
         
         func update(scale factor: CGFloat) {
-            do {
-                try videoDeviceInput.device.lockForConfiguration()
-                videoDeviceInput.device.videoZoomFactor = factor
-                videoDeviceInput.device.unlockForConfiguration()
-            } catch {
-                delegate?.didCameraErrorOccured(self, error: "An error has occured because of zooming: \(error.localizedDescription)")
+            sessionQueue.async {
+                do {
+                    try self.videoDeviceInput.device.lockForConfiguration()
+                    self.videoDeviceInput.device.videoZoomFactor = factor
+                    self.videoDeviceInput.device.unlockForConfiguration()
+                } catch {
+                    self.delegate?.didCameraErrorOccured(self, error: "An error has occured because of zooming: \(error.localizedDescription)")
+                }
             }
         }
         
@@ -130,11 +141,9 @@ final class CameraService: NSObject, CameraServiceInterace {
         
         session.commitConfiguration()
         
-        sessionQueue.async {
-            // TODO: - Add observers.
-            self.session.startRunning()
-            self.isSessionRunning = self.session.isRunning
-        }
+        addObservers()
+        session.startRunning()
+        isSessionRunning = self.session.isRunning
     }
     
     private func addVideoDeviceInput() {
@@ -291,6 +300,182 @@ final class CameraService: NSObject, CameraServiceInterace {
             }
         }
     }
+    
+    private func addObservers() {
+        let sessionRunningObservation = session.observe(\.isRunning, options: .new) { _, change in
+            guard let isSessionRunning = change.newValue else { return }
+            // call delegate method for session running value has changed.
+        }
+        keyValueObserverations.append(sessionRunningObservation)
+        
+        let systemPressureStateObservation = observe(\.videoDeviceInput?.device.systemPressureState, options: .new) { _, change in
+            guard let systemPressureState = change.newValue else { return }
+            // call setFrameRate method
+        }
+        keyValueObserverations.append(systemPressureStateObservation)
+        
+        let cameraChangingObservation = observe(\.videoDeviceInput?.device, options: .new) { _, change in
+            guard let chosenCamera = change.newValue else { return }
+            print(chosenCamera!)
+            // call delegate method for the video device has changed
+        }
+        keyValueObserverations.append(cameraChangingObservation)
+        
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(subjectAreaDidChanged(_:)),
+            name: .AVCaptureDeviceSubjectAreaDidChange,
+            object: videoDeviceInput.device
+        )
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(sessionDidRunTimeError(_:)),
+            name: .AVCaptureSessionRuntimeError,
+            object: session
+        )
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(sessionWasInterruped(_:)),
+            name: .AVCaptureSessionWasInterrupted,
+            object: session
+        )
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(sessionInterruptionEnded(_:)),
+            name: .AVCaptureSessionInterruptionEnded,
+            object: session
+        )
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleMicrophoneRouteChange(_:)),
+            name: AVAudioSession.routeChangeNotification,
+            object: nil
+        )
+    }
+    
+    private func removeObservers() {
+        NotificationCenter.default.removeObserver(self)
+        for keyValueObservation in keyValueObserverations {
+            keyValueObservation.invalidate()
+        }
+        keyValueObserverations.removeAll()
+    }
+    
+    private func setRecommendedFrameRateRangeForPressureState(systemPressureState: AVCaptureDevice.SystemPressureState) {
+        let pressureLevel = systemPressureState.level
+        switch pressureLevel {
+        case .critical, .serious:
+            /*
+             The frame rates used here are only for demonstration purposes.
+             Your frame rate throttling may be different depending on your app's camera configuration.
+             */
+            sessionQueue.async {
+                do {
+                    try self.videoDeviceInput.device.lockForConfiguration()
+                    print("WARNING: Reached elevated system pressure level: \(pressureLevel). Throttling frame rate.")
+                    self.videoDeviceInput.device.activeVideoMinFrameDuration = CMTime(
+                        value: 1,
+                        timescale: 20
+                    )
+                    self.videoDeviceInput.device.activeVideoMaxFrameDuration = CMTime(
+                        value: 1,
+                        timescale: 15
+                    )
+                    self.videoDeviceInput.device.unlockForConfiguration()
+                } catch {
+                    print("Could not lock device for configuration: \(error)")
+                }
+            }
+        case .shutdown:
+            print("session stopped running due to shutdown system pressue level.")
+        default: break
+        }
+    }
+ 
+    private func loadImage(data: Data) {
+        guard let dataProvider = CGDataProvider(data: data as CFData),
+              let cgImageRef: CGImage = CGImage(
+                jpegDataProviderSource: dataProvider,
+                decode: nil,
+                shouldInterpolate: true,
+                intent: .defaultIntent
+              ) else { return }
+        let image = UIImage(cgImage: cgImageRef, scale: 1.0, orientation: .right)
+        // call delegate method for captured image
+    }
+    
+    @objc
+    private func subjectAreaDidChanged(_ sender: Notification) {
+        let devicePoint = CGPoint(x: 0.5, y: 0.5)
+        focus(
+            with: .continuousAutoFocus,
+            exposureMode: .continuousAutoExposure,
+            at: devicePoint,
+            monitorSubjectAreaChange: false
+        )
+    }
+    
+    @objc
+    private func sessionDidRunTimeError(_ sender: Notification) {
+        guard let error = sender.userInfo?[AVCaptureSessionErrorKey] as? AVError else { return }
+        print("Capture session runtime error:\(error)")
+        if error.code == .mediaServicesWereReset {
+            // if media services were reset and the last start succeeded, restart the session.
+            sessionQueue.async {
+                if self.isSessionRunning {
+                    self.session.startRunning()
+                    self.isSessionRunning = self.session.isRunning
+                } else {
+                    print("show alert or something?")
+                }
+            }
+        }
+    }
+    
+    // MARK: - Handle Interruption
+    @objc
+    private func sessionWasInterruped(_ sender: Notification) {
+        if let userInfoValue = sender.userInfo?[AVCaptureSessionInterruptionReasonKey] as AnyObject?,
+           let reasonIntegerValue = userInfoValue.integerValue,
+           let reason = AVCaptureSession.InterruptionReason(rawValue: reasonIntegerValue)
+        {
+            switch reason {
+            case .audioDeviceInUseByAnotherClient:
+                print("An interruption caused by the audio hardware temporarily being made unavailable(for ex, for a phone call or alarm.")
+                break
+            case .videoDeviceInUseByAnotherClient:
+                print("an interruption caused by the video device temporarily being made unavailable(for ex, when used by another capture session.")
+                break
+            case .videoDeviceNotAvailableDueToSystemPressure:
+                print("An interruption due to system pressure, such as thermal duress.")
+                break
+            case .videoDeviceNotAvailableInBackground:
+                print("An interruption caused by the app being sent to the background while using a camera.")
+                break
+            case .videoDeviceNotAvailableWithMultipleForegroundApps:
+                print("An interruption caused when your ap is running in Slide Overi Split View, or PiP mode")
+                break
+            @unknown default: break
+            }
+        }
+    }
+    
+    @objc
+    private func sessionInterruptionEnded(_ sender: Notification) {
+        print("capture session interruption ended.")
+    }
+        
+    @objc
+    private func handleMicrophoneRouteChange(_ sender: Notification) {
+        guard let userInfo = sender.userInfo,
+              let reasonValue = userInfo[AVAudioSessionRouteChangeReasonKey] as? UInt,
+              let reason = AVAudioSession.RouteChangeReason(rawValue: reasonValue) else { return }
+        switch reason {
+        case .newDeviceAvailable: print("new device available.")
+        case .oldDeviceUnavailable: print("old device unavailable.")
+        default: break
+        }
+    }
 }
 
 // MARK: - AVCaptureVideoDataOutputSampleBufferDelegate
@@ -298,3 +483,17 @@ extension CameraService: AVCaptureVideoDataOutputSampleBufferDelegate {}
 
 // MARK: - AVCaptureAudioDataOutputSampleBufferDelegate
 extension CameraService: AVCaptureAudioDataOutputSampleBufferDelegate {}
+
+// MARK: - AVCapturePhotoCapture Delegate
+extension CameraService: AVCapturePhotoCaptureDelegate {
+    func photoOutput(_ output: AVCapturePhotoOutput,
+                     didFinishProcessingPhoto photo: AVCapturePhoto,
+                     error: Error?) {
+        guard error == nil,
+              let outputData = photo.fileDataRepresentation() else {
+            delegate?.didCameraErrorOccured(self, error: "Photo Error: \(String(describing: error))")
+            return
+        }
+        loadImage(data: outputData)
+    }
+}

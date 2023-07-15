@@ -41,10 +41,14 @@ extension IVSCustomBroadcastViewModel: IVSCustomBroadcastViewModelInterafce {
     
     func viewDidAppear() {
         guard let url = URL(string: K.streamURLString) else { return }
+        UIApplication.shared.isIdleTimerDisabled = true
         broadcastSession.startBroadcastSession(with: url, streamKey: K.streamKey)
     }
     
-    func viewWillDisappear() {}
+    func viewWillDisappear() {
+        UIApplication.shared.isIdleTimerDisabled = false
+        broadcastSession.stopBroadcastSession()
+    }
     
     func didTappedPreviewView(devicePoint point: CGPoint) {
         broadcastSession.startCameraFocus(with: point)
