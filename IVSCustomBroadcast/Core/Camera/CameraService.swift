@@ -8,9 +8,15 @@
 import Foundation
 import AVFoundation
 
+protocol CameraServiceDelegate: AnyObject {
+    func didVideoCaptureOutput(_ delegate: CameraService, capturedOutput sampleBuffer: CMSampleBuffer)
+    func didAudioCaptureOutput(_ delegate: CameraService, capturedOutput sampleBuffer: CMSampleBuffer)
+}
+
 final class CameraService: NSObject {
     
     // MARK: - Properties
+    private weak var delegate: CameraServiceDelegate?
    
     // MARK: - Session
     private let session = AVCaptureSession()
@@ -41,6 +47,12 @@ final class CameraService: NSObject {
         case configurationFailed
     }
     
+    // MARK: - Initializer
+    init(delegate: CameraServiceDelegate) {
+        self.delegate = delegate
+        super.init()
+    }
+    
     // MARK: - Public Methods
     func loadSession() {
         let videoAuthrozationStatus = AVCaptureDevice.authorizationStatus(for: .video)
@@ -49,6 +61,17 @@ final class CameraService: NSObject {
         
         sessionQueue.async {
             self.configureSession()
+        }
+    }
+    
+    func captureOutput(_ output: AVCaptureOutput,
+                       didOutput sampleBuffer: CMSampleBuffer,
+                       from connection: AVCaptureConnection) {
+        if output == videoOutput {
+            connection.videoOrientation = .portrait
+            delegate?.didVideoCaptureOutput(self, capturedOutput: sampleBuffer)
+        } else if output == audioOutput {
+            delegate?.didAudioCaptureOutput(self, capturedOutput: sampleBuffer)
         }
     }
     
@@ -68,6 +91,7 @@ final class CameraService: NSObject {
             setupResult = .notAuthorized
         }
     }
+    
     private func configureSession() {
         if setupResult != .success {
             return
@@ -206,11 +230,7 @@ final class CameraService: NSObject {
 }
 
 // MARK: - AVCaptureVideoDataOutputSampleBufferDelegate
-extension CameraService: AVCaptureVideoDataOutputSampleBufferDelegate {
-    
-}
+extension CameraService: AVCaptureVideoDataOutputSampleBufferDelegate {}
 
 // MARK: - AVCaptureAudioDataOutputSampleBufferDelegate
-extension CameraService: AVCaptureAudioDataOutputSampleBufferDelegate {
-    
-}
+extension CameraService: AVCaptureAudioDataOutputSampleBufferDelegate {}
