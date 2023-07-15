@@ -9,6 +9,7 @@ import Foundation
 import AVFoundation
 
 protocol CameraServiceDelegate: AnyObject {
+    func didCameraErrorOccured(_ delegate: CameraService, error: String)
     func didVideoCaptureOutput(_ delegate: CameraService, capturedOutput sampleBuffer: CMSampleBuffer)
     func didAudioCaptureOutput(_ delegate: CameraService, capturedOutput sampleBuffer: CMSampleBuffer)
 }
@@ -16,12 +17,12 @@ protocol CameraServiceDelegate: AnyObject {
 final class CameraService: NSObject {
     
     // MARK: - Properties
-    private weak var delegate: CameraServiceDelegate?
+    weak var delegate: CameraServiceDelegate?
    
     // MARK: - Session
     private let session = AVCaptureSession()
     private var isSessionRunning = false
-    private var setupResult: SessionSetupResult = .success
+    var setupResult: SessionSetupResult = .success
     
     // MARK: - Session Queue
     private let sessionQueue = DispatchQueue(label: "session queue")
@@ -41,17 +42,14 @@ final class CameraService: NSObject {
     private var keyValueObserverations = [NSKeyValueObservation]()
     
     // MARK: - Nested Types
-    private enum SessionSetupResult {
+    enum SessionSetupResult {
         case success
         case notAuthorized
         case configurationFailed
     }
     
     // MARK: - Initializer
-    init(delegate: CameraServiceDelegate) {
-        self.delegate = delegate
-        super.init()
-    }
+    override init() { }
     
     // MARK: - Public Methods
     func loadSession() {
@@ -104,6 +102,12 @@ final class CameraService: NSObject {
         addCapturePhotoOutput()
         
         session.commitConfiguration()
+        
+        sessionQueue.async {
+            // TODO: - Add observers.
+            self.session.startRunning()
+            self.isSessionRunning = self.session.isRunning
+        }
     }
     
     private func addVideoDeviceInput() {
@@ -111,7 +115,7 @@ final class CameraService: NSObject {
         guard let videoDevice = defaultVideoDevice else {
             setupResult = .configurationFailed
             session.commitConfiguration()
-            print("couldn't find any video device.")
+            delegate?.didCameraErrorOccured(self, error: "couldn't find any video device.")
             return
         }
         
@@ -124,12 +128,12 @@ final class CameraService: NSObject {
             } else {
                 setupResult = .configurationFailed
                 session.commitConfiguration()
-                print("couldn't add video device input to the session.")
+                delegate?.didCameraErrorOccured(self, error: "couldn't add video device input to the session.")
             }
         } catch {
             setupResult = .configurationFailed
             session.commitConfiguration()
-            print("couldn't initialize video device input: \(videoDevice.localizedName)")
+            delegate?.didCameraErrorOccured(self, error: "couldn't initialize video device input: \(videoDevice.localizedName)")
         }
     }
     
@@ -146,7 +150,7 @@ final class CameraService: NSObject {
         } else {
             setupResult = .configurationFailed
             session.commitConfiguration()
-            print("couldn't add video output to the session.")
+            delegate?.didCameraErrorOccured(self, error: "couldn't add video output to the session.")
         }
     }
     
@@ -154,7 +158,7 @@ final class CameraService: NSObject {
         guard let audioDevice = AVCaptureDevice.default(for: .audio) else {
             setupResult = .configurationFailed
             session.commitConfiguration()
-            print("couldn't find any default audio device.")
+            delegate?.didCameraErrorOccured(self, error: "couldn't find any default audio device.")
             return
         }
         do {
@@ -166,10 +170,10 @@ final class CameraService: NSObject {
             } else {
                 setupResult = .configurationFailed
                 session.commitConfiguration()
-                print("couldn't add audio input to the session")
+                delegate?.didCameraErrorOccured(self, error: "couldn't add audio input to the session")
             }
         } catch {
-            print("couldn't initialize audio device input: \(audioDevice.localizedName)")
+            delegate?.didCameraErrorOccured(self, error: "couldn't initialize audio device input: \(audioDevice.localizedName)")
         }
     }
     
@@ -185,7 +189,7 @@ final class CameraService: NSObject {
         } else {
             setupResult = .configurationFailed
             session.commitConfiguration()
-            print("couldn't add audio output to the session.")
+            delegate?.didCameraErrorOccured(self, error: "couldn't add audio output to the session.")
         }
     }
     
