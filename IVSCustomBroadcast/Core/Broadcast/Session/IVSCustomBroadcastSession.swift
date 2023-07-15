@@ -13,11 +13,19 @@ struct StreamModel {
     let streamKey: String
 }
 
+protocol IVSCustomBroadcastSessionInterface {
+    var delegate: IVSCustomBroadcastSessionDelegate? { get set }
+    
+    func startBroadcastSession(with url: URL, streamKey: String)
+    func startCameraFocus(with devicePoint: CGPoint)
+    func startCameraZoom(with pinch: UIPinchGestureRecognizer)
+}
+
 protocol IVSCustomBroadcastSessionDelegate: AnyObject {
     func attachCameraPreview(previewView: UIView)
 }
 
-final class IVSCustomBroadcastSession: NSObject {
+final class IVSCustomBroadcastSession: NSObject, IVSCustomBroadcastSessionInterface {
     
     // MARK: - Properties
     weak var delegate: IVSCustomBroadcastSessionDelegate?

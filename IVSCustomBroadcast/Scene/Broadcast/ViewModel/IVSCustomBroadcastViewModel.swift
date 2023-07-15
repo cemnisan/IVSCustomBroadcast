@@ -25,10 +25,10 @@ final class IVSCustomBroadcastViewModel {
     weak var view: IVSCustomBroadcastViewController?
     
     // MARK: - Dependencies
-    private let broadcastSession: IVSCustomBroadcastSession
+    private var broadcastSession: IVSCustomBroadcastSessionInterface
     
     // MARK: - Initializer
-    init(broadcastSession: IVSCustomBroadcastSession) {
+    init(broadcastSession: IVSCustomBroadcastSessionInterface) {
         self.broadcastSession = broadcastSession
     }
 }
